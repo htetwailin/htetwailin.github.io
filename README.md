@@ -3,7 +3,9 @@
 Personal site: CV for employers, and the Lynn POS products for shop and restaurant owners. One page,
 two audiences, one contact section serving both.
 
-**Live:** https://USERNAME.gitlab.io/hwl-portfolio *(replace once deployed — see below)*
+**Live:** https://htetwailin.github.io
+
+Setup guides: [GITHUB_SETUP.md](GITHUB_SETUP.md) (primary) · [GITLAB_SETUP.md](GITLAB_SETUP.md)
 
 ## What it is
 
