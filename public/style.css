@@ -302,6 +302,62 @@ h3 { margin: 0 0 .4rem; font-size: 1.24rem; font-weight: 660; letter-spacing: -.
 
 /* ─────────────────────────── projects ────────────────────── */
 
+/* Featured project — the one a visitor can go and use right now, so it gets the
+   accent border and the full width rather than a slot in the grid. */
+.featured {
+  position: relative;
+  margin-bottom: 1.35rem;
+  padding: 2.2rem;
+  border-color: rgba(240, 180, 41, .38);
+  background:
+    linear-gradient(135deg, rgba(240, 180, 41, .07), transparent 55%),
+    var(--surface);
+}
+.featured:hover { border-color: var(--accent); }
+
+.featured-tag {
+  display: inline-block;
+  margin-bottom: 1.1rem;
+  padding: .32rem .85rem;
+  background: rgba(52, 211, 153, .12);
+  border: 1px solid rgba(52, 211, 153, .35);
+  border-radius: 999px;
+  font-size: .76rem; font-weight: 700; letter-spacing: 1.1px; text-transform: uppercase;
+  color: var(--ok);
+}
+
+.featured-body { display: grid; grid-template-columns: 1.7fr 1fr; gap: 2.2rem; align-items: start; }
+
+.featured h3 { font-size: 1.55rem; }
+.featured-lede { margin: 0 0 1.1rem; color: var(--muted); font-size: 1.02rem; }
+.featured ul { margin: 0; padding-left: 1.15rem; }
+.featured ul li { margin: .35rem 0; font-size: .96rem; color: var(--muted); }
+
+.featured-note {
+  margin: 1.2rem 0 0;
+  font-size: .86rem; font-style: italic; color: var(--muted); opacity: .8;
+}
+
+.featured-links { display: grid; gap: .7rem; }
+
+.store-btn {
+  display: flex; align-items: center; gap: .85rem;
+  padding: .8rem 1.1rem;
+  background: var(--surface-2); border: 1px solid var(--line); border-radius: 11px;
+  text-decoration: none; color: var(--text);
+  transition: border-color .18s, transform .18s, background .18s;
+}
+.store-btn:hover { border-color: var(--accent); background: #22304e; transform: translateY(-2px); }
+
+.store-ic {
+  display: grid; place-items: center;
+  width: 34px; height: 34px; flex: 0 0 34px;
+  border-radius: 9px; background: rgba(240, 180, 41, .12);
+  font-size: 1.05rem; color: var(--accent);
+}
+.store-btn small { display: block; font-size: .72rem; color: var(--muted); line-height: 1.3; }
+.store-btn strong { display: block; font-size: .98rem; font-weight: 650; line-height: 1.3; }
+
 .projects { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.35rem; }
 
 .proj .tech {
@@ -344,6 +400,9 @@ h3 { margin: 0 0 .4rem; font-size: 1.24rem; font-weight: 660; letter-spacing: -.
 /* ─────────────────────────── responsive ──────────────────── */
 
 @media (max-width: 900px) {
+  .featured-body { grid-template-columns: 1fr; gap: 1.6rem; }
+  .featured { padding: 1.6rem; }
+
   .hero-inner { grid-template-columns: 1fr; }
   .hero-card { order: -1; max-width: 420px; }
 
