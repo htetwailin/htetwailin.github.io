@@ -1,0 +1,82 @@
+# ============================================================================
+#  Verify and deploy to GitHub Pages
+#
+#  Same two stages as .gitlab-ci.yml, so the site behaves identically wherever
+#  it is hosted: check the things that are invisible in a diff and obvious to a
+#  visitor, then publish public/.
+#
+#  ONE-TIME SETUP after the first push:
+#      Settings -> Pages -> Build and deployment -> Source: GitHub Actions
+#  Without that, this workflow runs green and nothing is ever served.
+# ============================================================================
+
+name: Verify and deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:        # lets you re-run it by hand from the Actions tab
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# A newer push supersedes one already deploying, rather than racing it.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Required files exist
+        run: |
+          for f in public/index.html public/style.css public/script.js public/Htet-Wai-Lin-CV.pdf; do
+            test -f "$f" || { echo "MISSING: $f"; exit 1; }
+            echo "  ok  $f"
+          done
+
+      - name: Local asset references resolve
+        run: |
+          fail=0
+          refs=$(grep -oE '(href|src)="[^"#:]+"' public/index.html \
+                 | sed -E 's/^(href|src)="//; s/"$//' \
+                 | grep -vE '^(https?:|mailto:|tel:|data:)' | sort -u)
+          for r in $refs; do
+            if [ -f "public/$r" ]; then echo "  ok  $r"; else echo "  BROKEN  $r"; fail=1; fi
+          done
+          exit $fail
+
+      - name: No leftover placeholders
+        run: |
+          if grep -nEi '\[(PHONE|EMAIL|VIBER|TODO|FIXME)\]|lorem ipsum' public/index.html; then
+            echo "Placeholder text found in index.html"; exit 1
+          fi
+          echo "  ok  none found"
+
+      - name: Page has a title and a description
+        run: |
+          grep -q '<title>[^<]\+</title>' public/index.html || { echo "no <title>"; exit 1; }
+          grep -q 'name="description"'    public/index.html || { echo "no meta description"; exit 1; }
+          echo "  ok"
+
+  deploy:
+    needs: verify
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+      - id: deployment
+        uses: actions/deploy-pages@v4
