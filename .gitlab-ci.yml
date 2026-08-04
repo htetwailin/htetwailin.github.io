@@ -1,16 +1,14 @@
 # ============================================================================
 #  Htet Wai Lin - portfolio  |  GitLab CI/CD
 #
-#  Two stages. The site is plain HTML so there is nothing to compile, which
-#  means the pipeline's job is to catch the mistakes a build step would
-#  otherwise catch for you: a broken asset path, a placeholder left in the
-#  page, an HTML file that does not parse.
+#  The site files live at the repository ROOT so that GitHub's branch-based
+#  publisher serves them correctly. GitLab Pages instead insists on a folder
+#  called `public/`, so the deploy job below builds that folder by copying the
+#  site files into it - which is the ordinary GitLab pattern, and keeps one
+#  copy of every file rather than two that can drift apart.
 #
 #    verify  - runs on every push and every merge request
-#    deploy  - publishes public/ to GitLab Pages, default branch only
-#
-#  GitLab Pages serves whatever the `pages` job leaves in `public/`, which is
-#  why the site lives in that folder rather than at the repository root.
+#    deploy  - assembles public/ and publishes it, default branch only
 # ============================================================================
 
 stages:
@@ -19,10 +17,10 @@ stages:
 
 default:
   image: alpine:3.20
-  interruptible: true          # a newer push cancels this run instead of queueing behind it
+  interruptible: true
 
 # ---------------------------------------------------------------------------
-# Structure: the files Pages needs must exist, and nothing may reference an
+# Structure: the files the site needs must exist, and nothing may reference an
 # asset that is not in the repository. A 404 on style.css is invisible in a
 # diff and obvious to every visitor.
 # ---------------------------------------------------------------------------
@@ -30,7 +28,7 @@ check:structure:
   stage: verify
   script:
     - echo "── required files ──"
-    - for f in public/index.html public/style.css public/script.js public/Htet-Wai-Lin-CV.pdf; do
+    - for f in index.html style.css script.js Htet-Wai-Lin-CV.pdf; do
         test -f "$f" || { echo "MISSING: $f"; exit 1; };
         echo "  ok  $f";
       done
@@ -38,18 +36,18 @@ check:structure:
     - apk add --no-cache grep >/dev/null
     - |
       fail=0
-      refs=$(grep -oE '(href|src)="[^"#:]+"' public/index.html \
+      refs=$(grep -oE '(href|src)="[^"#:]+"' index.html \
              | sed -E 's/^(href|src)="//; s/"$//' \
              | grep -vE '^(https?:|mailto:|tel:|data:)' | sort -u)
       for r in $refs; do
-        if [ -f "public/$r" ]; then echo "  ok  $r"; else echo "  BROKEN  $r"; fail=1; fi
+        if [ -f "$r" ]; then echo "  ok  $r"; else echo "  BROKEN  $r"; fail=1; fi
       done
       exit $fail
 
 # ---------------------------------------------------------------------------
-# Content: placeholders must never reach production. This exists because a
-# template phone number on a live contact page costs real enquiries, and it is
-# the one class of mistake nobody notices while reviewing their own work.
+# Content: placeholders must never reach production. A template phone number
+# on a live contact page costs real enquiries, and it is the one class of
+# mistake nobody notices while reviewing their own work.
 # ---------------------------------------------------------------------------
 check:content:
   stage: verify
@@ -57,19 +55,19 @@ check:content:
     - apk add --no-cache grep >/dev/null
     - echo "── no leftover placeholders ──"
     - |
-      if grep -nE '\[(PHONE|EMAIL|VIBER|TODO|FIXME)\]|lorem ipsum' -i public/index.html; then
+      if grep -nE '\[(PHONE|EMAIL|VIBER|TODO|FIXME)\]|lorem ipsum' -i index.html; then
         echo "Placeholder text found in index.html"; exit 1
       fi
       echo "  ok  none found"
     - echo "── page has a title and a description ──"
-    - grep -q '<title>[^<]\+</title>' public/index.html || { echo "no <title>"; exit 1; }
-    - grep -q 'name="description"' public/index.html    || { echo "no meta description"; exit 1; }
+    - grep -q '<title>[^<]\+</title>' index.html || { echo "no <title>"; exit 1; }
+    - grep -q 'name="description"' index.html    || { echo "no meta description"; exit 1; }
     - echo "  ok"
 
 # ---------------------------------------------------------------------------
-# HTML validity. Kept in its own job and allowed to fail: the validator is
-# strict about things that are stylistic, and a pedantic warning should not be
-# able to stop a deploy. Read it, do not obey it blindly.
+# HTML validity. Its own job and allowed to fail: the validator is strict
+# about things that are stylistic, and a pedantic warning should not be able
+# to stop a deploy. Read it, do not obey it blindly.
 # ---------------------------------------------------------------------------
 check:html:
   stage: verify
@@ -77,7 +75,7 @@ check:html:
   allow_failure: true
   script:
     - pip install --quiet html5validator
-    - html5validator --root public --also-check-css --show-warnings
+    - html5validator --root . --match "index.html" --show-warnings
 
 # ---------------------------------------------------------------------------
 # Deploy. The job MUST be named `pages` - that name is the trigger, not a
@@ -86,6 +84,8 @@ check:html:
 pages:
   stage: deploy
   script:
+    - mkdir -p public
+    - cp index.html style.css script.js Htet-Wai-Lin-CV.pdf public/
     - echo "Publishing $(find public -type f | wc -l) files to GitLab Pages"
   artifacts:
     paths:

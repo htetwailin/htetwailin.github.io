@@ -15,29 +15,33 @@ next time it is touched. The JavaScript does three things (mobile menu, current-
 footer year) and the page is fully readable without it.
 
 ```
-public/                  everything GitLab Pages serves
-├── index.html
-├── style.css
-├── script.js
-└── Htet-Wai-Lin-CV.pdf  linked from the hero and the contact section
-.gitlab-ci.yml           verify → deploy
+index.html               the whole site
+style.css
+script.js
+Htet-Wai-Lin-CV.pdf      linked from the hero and the contact section
+.nojekyll                stops GitHub processing the files through Jekyll
+.github/workflows/       verify → deploy   (GitHub Pages)
+.gitlab-ci.yml           verify → deploy   (GitLab Pages)
 ```
 
-The site lives in `public/` because that is the folder GitLab Pages publishes. It is not an
-arbitrary name and renaming it breaks the deploy.
+**The site files sit at the repository root on purpose.** GitHub's built-in "Deploy from a branch"
+publisher serves the root and knows nothing about subfolders, so keeping them here means the site is
+correct under either publishing source — the Actions workflow or the branch builder. GitLab Pages
+insists on a folder named `public/`, so its `pages` job copies these files into one at build time
+rather than a second copy being kept in the repository.
 
 ## Working on it locally
 
 There is no server to run — open the file:
 
 ```powershell
-start public\index.html
+start index.html
 ```
 
 If you want a local server (needed only if you later add anything fetched over HTTP):
 
 ```powershell
-python -m http.server 8080 --directory public
+python -m http.server 8080
 ```
 
 ## The pipeline

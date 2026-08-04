@@ -1,13 +1,15 @@
 # ============================================================================
 #  Verify and deploy to GitHub Pages
 #
-#  Same two stages as .gitlab-ci.yml, so the site behaves identically wherever
-#  it is hosted: check the things that are invisible in a diff and obvious to a
-#  visitor, then publish public/.
+#  The site files live at the REPOSITORY ROOT (index.html, style.css,
+#  script.js, the CV) rather than in a subfolder. That is deliberate: GitHub's
+#  built-in "Deploy from a branch" builder serves the root and knows nothing
+#  about subfolders, so keeping the site there means the page is correct under
+#  either publishing source. `.nojekyll` stops GitHub running the files through
+#  Jekyll on the way out.
 #
-#  ONE-TIME SETUP after the first push:
-#      Settings -> Pages -> Build and deployment -> Source: GitHub Actions
-#  Without that, this workflow runs green and nothing is ever served.
+#  This workflow stages only the site files into _site and publishes that, so
+#  the README and setup guides stay in the repository without being served.
 # ============================================================================
 
 name: Verify and deploy
@@ -16,14 +18,13 @@ on:
   push:
     branches: [main]
   pull_request:
-  workflow_dispatch:        # lets you re-run it by hand from the Actions tab
+  workflow_dispatch:
 
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# A newer push supersedes one already deploying, rather than racing it.
 concurrency:
   group: pages
   cancel-in-progress: true
@@ -36,7 +37,7 @@ jobs:
 
       - name: Required files exist
         run: |
-          for f in public/index.html public/style.css public/script.js public/Htet-Wai-Lin-CV.pdf; do
+          for f in index.html style.css script.js Htet-Wai-Lin-CV.pdf; do
             test -f "$f" || { echo "MISSING: $f"; exit 1; }
             echo "  ok  $f"
           done
@@ -44,25 +45,25 @@ jobs:
       - name: Local asset references resolve
         run: |
           fail=0
-          refs=$(grep -oE '(href|src)="[^"#:]+"' public/index.html \
+          refs=$(grep -oE '(href|src)="[^"#:]+"' index.html \
                  | sed -E 's/^(href|src)="//; s/"$//' \
                  | grep -vE '^(https?:|mailto:|tel:|data:)' | sort -u)
           for r in $refs; do
-            if [ -f "public/$r" ]; then echo "  ok  $r"; else echo "  BROKEN  $r"; fail=1; fi
+            if [ -f "$r" ]; then echo "  ok  $r"; else echo "  BROKEN  $r"; fail=1; fi
           done
           exit $fail
 
       - name: No leftover placeholders
         run: |
-          if grep -nEi '\[(PHONE|EMAIL|VIBER|TODO|FIXME)\]|lorem ipsum' public/index.html; then
+          if grep -nEi '\[(PHONE|EMAIL|VIBER|TODO|FIXME)\]|lorem ipsum' index.html; then
             echo "Placeholder text found in index.html"; exit 1
           fi
           echo "  ok  none found"
 
       - name: Page has a title and a description
         run: |
-          grep -q '<title>[^<]\+</title>' public/index.html || { echo "no <title>"; exit 1; }
-          grep -q 'name="description"'    public/index.html || { echo "no meta description"; exit 1; }
+          grep -q '<title>[^<]\+</title>' index.html || { echo "no <title>"; exit 1; }
+          grep -q 'name="description"'    index.html || { echo "no meta description"; exit 1; }
           echo "  ok"
 
   deploy:
@@ -74,9 +75,16 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Stage the site
+        run: |
+          mkdir -p _site
+          cp index.html style.css script.js Htet-Wai-Lin-CV.pdf .nojekyll _site/
+          ls -la _site
+
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: public
+          path: _site
       - id: deployment
         uses: actions/deploy-pages@v4
