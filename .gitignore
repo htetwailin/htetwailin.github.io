@@ -1,0 +1,11 @@
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# Nothing is built locally - public/ is source, not output, and must be committed.
