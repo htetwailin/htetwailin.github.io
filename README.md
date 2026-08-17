@@ -5,7 +5,7 @@ two audiences, one contact section serving both.
 
 **Live:** https://htetwailin.github.io
 
-Setup guides: [GITHUB_SETUP.md](GITHUB_SETUP.md) (primary) · [GITLAB_SETUP.md](GITLAB_SETUP.md)
+Setup guide: [GITHUB_SETUP.md](GITHUB_SETUP.md)
 
 ## What it is
 
@@ -21,14 +21,11 @@ script.js
 Htet-Wai-Lin-CV.pdf      linked from the hero and the contact section
 .nojekyll                stops GitHub processing the files through Jekyll
 .github/workflows/       verify → deploy   (GitHub Pages)
-.gitlab-ci.yml           verify → deploy   (GitLab Pages)
 ```
 
 **The site files sit at the repository root on purpose.** GitHub's built-in "Deploy from a branch"
 publisher serves the root and knows nothing about subfolders, so keeping them here means the site is
-correct under either publishing source — the Actions workflow or the branch builder. GitLab Pages
-insists on a folder named `public/`, so its `pages` job copies these files into one at build time
-rather than a second copy being kept in the repository.
+correct under either publishing source — the Actions workflow or the branch builder.
 
 ## Working on it locally
 
@@ -46,43 +43,42 @@ python -m http.server 8080
 
 ## The pipeline
 
-| Stage | Job | Runs on | Does |
-| --- | --- | --- | --- |
-| verify | `check:structure` | every push, every MR | Required files exist; every local `href`/`src` in `index.html` resolves to a file in the repo |
-| verify | `check:content` | every push, every MR | No `[PHONE]`-style placeholders reached production; page has a title and meta description |
-| verify | `check:html` | every push, every MR | HTML5 + CSS validation. `allow_failure: true` — read it, don't obey it blindly |
-| deploy | `pages` | default branch only | Publishes `public/` to GitLab Pages |
+One workflow, [.github/workflows/deploy.yml](.github/workflows/deploy.yml), with two jobs.
 
-The two checks that can fail the pipeline are both there for the same reason: they catch mistakes
-that are invisible in a diff and obvious to a visitor. A broken `style.css` path shows as an
-unstyled page; a leftover placeholder on a contact section costs real enquiries.
+| Job | Runs on | Does |
+| --- | --- | --- |
+| `verify` | every push, every PR | Required files exist; every local `href`/`src` in `index.html` resolves to a file in the repo; no `[PHONE]`-style placeholders reached production; page has a title and meta description |
+| `deploy` | `main` only, and only if `verify` passed | Copies the site files into `_site/` and publishes that to GitHub Pages |
 
-`pages` is a reserved job name — GitLab publishes because the job is *called* `pages`, not because
-of anything in its script.
+The checks are there because they catch mistakes that are invisible in a diff and obvious to a
+visitor. A broken `style.css` path shows as an unstyled page; a leftover placeholder on a contact
+section costs real enquiries.
 
-## First deploy
+Pull requests are verified but never deployed. The deploy job stages into `_site/` rather than
+publishing the repository wholesale, so this README stays in the repo without being served.
+
+## Deploying
+
+Push to `main`:
 
 ```powershell
-cd "D:\Htet Wai Lin\Project\hwl-portfolio"
-git init -b main
-git add -A
-git commit -m "Portfolio site with GitLab Pages pipeline"
-git remote add origin https://gitlab.com/USERNAME/hwl-portfolio.git
-git push -u origin main
+git push
 ```
 
-Then in GitLab: **Deploy → Pages**. The URL appears there once the first `pages` job succeeds —
-usually a minute or two. If the project is private, tick **Settings → General → Visibility → Pages:
-Everyone** or nobody outside the project can see it.
+The Actions tab shows the run; the live URL appears on the `deploy` job once it finishes, usually a
+minute or two. **Settings → Pages → Source** must be set to **GitHub Actions** — on "Deploy from a
+branch" the workflow's deploy step fails.
 
 ## Editing content
 
-Everything is in `public/index.html`, in reading order — hero, products, experience, skills,
+Everything is in `index.html`, in reading order — hero, products, experience, skills,
 projects, contact. There is no data file and no templating: change the text in the HTML.
 
-- **Replace the CV**: overwrite `public/Htet-Wai-Lin-CV.pdf`, keeping the filename, and both links
+- **Replace the CV**: overwrite `Htet-Wai-Lin-CV.pdf`, keeping the filename, and both links
   keep working.
-- **Add a real photo**: drop a square image in `public/`, then swap the `.avatar` div in
-  `index.html` for `<img class="avatar" src="photo.jpg" alt="Htet Wai Lin">`.
+- **Replace the photo**: overwrite `profile.jpg` in the repository root, keeping the filename. Use a
+  square image — `.avatar` crops it to a 200px circle and `object-fit: cover` trims anything that
+  doesn't match rather than stretching it. If you change the filename, update both `index.html` and
+  the `cp` line in the deploy workflow.
 - **Colours**: the whole palette is CSS custom properties at the top of `style.css`. `--accent` is
   the amber; change that one value and the whole site follows.

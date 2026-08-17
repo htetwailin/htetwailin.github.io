@@ -36,7 +36,7 @@ Two things that matter here:
   other name gives you `https://htetwailin.github.io/other-name` instead.
 - **Leave the three "Initialize" options off.** Your repo already has commits. A README created
   here puts a commit on GitHub that your machine doesn't have, and the first push is rejected with
-  `non-fast-forward` — exactly what happened on GitLab.
+  `non-fast-forward`.
 
 Free GitHub Pages requires a **public** repository. The code being public is normal for a portfolio;
 it is the same site everyone can already see.
@@ -47,17 +47,14 @@ it is the same site everyone can already see.
 
 ```powershell
 cd "D:\Htet Wai Lin\Project\hwl-portfolio"
-git remote add github https://github.com/htetwailin/htetwailin.github.io.git
-git push -u github main
+git remote add origin https://github.com/htetwailin/htetwailin.github.io.git
+git push -u origin main
 ```
 
-`origin` is still GitLab; GitHub is added alongside as `github`. Nothing about the GitLab setup is
-disturbed.
-
-If it says *"remote github already exists"*:
+If it says *"remote origin already exists"*:
 
 ```powershell
-git remote set-url github https://github.com/htetwailin/htetwailin.github.io.git
+git remote set-url origin https://github.com/htetwailin/htetwailin.github.io.git
 ```
 
 **Authentication:** a browser window opens — sign in and approve. If it asks in the terminal
@@ -68,7 +65,7 @@ the password. Windows remembers it after the first time.
 **Check it landed:**
 
 ```powershell
-git ls-remote github refs/heads/main
+git ls-remote origin refs/heads/main
 ```
 
 The SHA it prints must match `git rev-parse HEAD`. If they match, every file is on GitHub.
@@ -187,12 +184,3 @@ Buy something like `htetwailin.com`, then:
 3. Wait for the check to pass, then tick **Enforce HTTPS**
 
 Until then `htetwailin.github.io` is a perfectly good address to put on a CV.
-
----
-
-## About the GitLab copy
-
-`origin` still points at GitLab and every file is there. Its pipeline never ran because GitLab would
-not start a runner on that account — an account issue, not a problem with the site. If it is ever
-sorted, `git push origin main` publishes there too, from the same `public/` folder, using
-`.gitlab-ci.yml`. You can keep both or ignore GitLab entirely; nothing here depends on it.

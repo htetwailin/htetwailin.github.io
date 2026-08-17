@@ -8,4 +8,9 @@ Desktop.ini
 .idea/
 *.swp
 
-# Nothing is built locally - public/ is source, not output, and must be committed.
+# Uncropped source of profile.jpg - kept locally so the crop can be redone,
+# not needed by the site.
+profile-original.jpg
+
+# Nothing is built locally - the site files at the repository root are source,
+# not output, and must be committed.

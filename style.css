@@ -158,12 +158,17 @@ h1 {
   box-shadow: var(--shadow);
 }
 
+/* Square source image, cropped to a circle. object-fit guards against a
+   replacement photo with a different ratio — it fills the circle and trims the
+   overflow rather than stretching the face. The gradient shows while the file
+   loads. */
 .avatar {
-  display: grid; place-items: center;
-  width: 92px; height: 92px; margin: 0 auto 1.6rem;
+  display: block;
+  width: 200px; height: 200px; margin: 0 auto 1.6rem;
   border-radius: 50%;
+  object-fit: cover; object-position: center;
   background: linear-gradient(135deg, var(--accent), var(--accent-dk));
-  color: #0b1220; font-size: 1.5rem; font-weight: 800; letter-spacing: 1px;
+  border: 2px solid var(--line);
 }
 
 .facts { margin: 0; }
