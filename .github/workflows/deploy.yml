@@ -79,7 +79,7 @@ jobs:
       - name: Stage the site
         run: |
           mkdir -p _site
-          cp index.html style.css script.js Htet-Wai-Lin-CV.pdf profile.jpg .nojekyll _site/
+          cp index.html style.css script.js Htet-Wai-Lin-CV.pdf profile.jpg .nojekyll privacy-policy.html terms-of-service.html _site/
           ls -la _site
 
       - uses: actions/configure-pages@v5
